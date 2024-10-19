@@ -11,3 +11,14 @@ class Ragify:
                           question: str
                           ):
         return question
+
+
+if __name__ == "__main__":
+    rag_pipeline = Ragify(
+        llm_name=""
+    )
+    print(
+        rag_pipeline.generate_response(
+            question="Sample Question"
+        )
+    )
