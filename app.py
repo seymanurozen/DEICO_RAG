@@ -1,10 +1,16 @@
-from ragify import Ragify
 import streamlit as st
+from ragify import Ragify
 
 
 @st.cache_resource
 def load_rag_chain(llm_name):
-    return Ragify(llm_name=llm_name)
+    return Ragify(
+        pdf_paths=[
+            r"./documents/METU_Regulation.pdf",
+            r"./documents/ISStudentGuide_2023-2024_v1.5.pdf"
+        ],
+        llm_name=llm_name
+    )
 
 
 # Function to create user login
@@ -13,7 +19,7 @@ def login(username, password):
     return username == "user" and password == "password"
 
 
-ragify_pipeline = load_rag_chain(llm_name="")
+ragify_pipeline = load_rag_chain(llm_name="llama3.2:latest")
 # Initialize session state for user login and conversation history
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
@@ -34,7 +40,8 @@ if not st.session_state['logged_in']:
             st.session_state['logged_in'] = True
             st.session_state['username'] = username
             st.success("Logged in successfully!")
-            st.session_state.chat_history.append({"role": "assistant", "content": f"Welcome {st.session_state.username}"})
+            st.session_state.chat_history.append(
+                {"role": "assistant", "content": f"Welcome {st.session_state.username}"})
             st.rerun()
         else:
             st.error("Invalid credentials. Please try again.")
@@ -55,5 +62,5 @@ if st.session_state['logged_in']:
         with st.chat_message("assistant"):
             with st.spinner("Responding..."):
                 response = ragify_pipeline.generate_response(question=question)
-                st.markdown(response)
-                st.session_state.chat_history.append({"role": "assistant", "content": response})
+            st.markdown(response)
+            st.session_state.chat_history.append({"role": "assistant", "content": response})
