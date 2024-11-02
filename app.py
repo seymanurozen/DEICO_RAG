@@ -13,6 +13,7 @@ def login(username, password):
     return username == "user" and password == "password"
 
 
+ragify_pipeline = load_rag_chain(llm_name="")
 # Initialize session state for user login and conversation history
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
@@ -53,6 +54,6 @@ if st.session_state['logged_in']:
 
         with st.chat_message("assistant"):
             with st.spinner("Responding..."):
-                response = Ragify.generate_response(question=question)
+                response = ragify_pipeline.generate_response(question=question)
                 st.markdown(response)
                 st.session_state.chat_history.append({"role": "assistant", "content": response})
