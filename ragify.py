@@ -7,9 +7,7 @@ class Ragify:
                  ):
         self.llm_name = llm_name
 
-    def generate_response(self,
-                          question: str
-                          ):
+    def generate_response(question: str):
         return question
 
 
