@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
     rag_pipeline = Ragify(
         pdf_paths=pdf_paths,
-        llm_name="llama3.2:latest"
+        llm_name="llama3.2:1b"
     )
 
     print(rag_pipeline.generate_response(question="What is the maximum number of semester for masters program?"))

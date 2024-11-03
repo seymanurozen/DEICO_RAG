@@ -19,7 +19,7 @@ def login(username, password):
     return username == "user" and password == "password"
 
 
-ragify_pipeline = load_rag_chain(llm_name="llama3.2:latest")
+ragify_pipeline = load_rag_chain(llm_name="llama3.2:1b")
 # Initialize session state for user login and conversation history
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
@@ -40,8 +40,6 @@ if not st.session_state['logged_in']:
             st.session_state['logged_in'] = True
             st.session_state['username'] = username
             st.success("Logged in successfully!")
-            st.session_state.chat_history.append(
-                {"role": "assistant", "content": f"Welcome {st.session_state.username}"})
             st.rerun()
         else:
             st.error("Invalid credentials. Please try again.")
