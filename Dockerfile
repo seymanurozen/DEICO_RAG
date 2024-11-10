@@ -6,7 +6,7 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy in the source code
-COPY ..
+COPY Ragify ./Ragify
 EXPOSE 8080
 
 CMD ["streamlit", "run", "app.py", "--server.port", "8080"]
