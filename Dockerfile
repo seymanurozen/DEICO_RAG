@@ -1,5 +1,5 @@
 FROM python:3.11-slim
-WORKDIR /usr/local/app
+WORKDIR /app
 
 # Install the application dependencies
 COPY requirements.txt ./
