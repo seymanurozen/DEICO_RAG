@@ -28,6 +28,8 @@ class Ragify:
         self.local_embeddings = OllamaEmbeddings(model="nomic-embed-text", base_url="https://ollama-947388510747.us-central1.run.app")
         # self.vectorstore = Chroma.from_documents(documents=self.all_splits, embedding=self.local_embeddings)
         self.vectorstore = FAISS.from_documents(documents=self.all_splits, embedding=self.local_embeddings)
+        print(len(self.all_splits))
+        print(len(self.vectorstore))
         self.model = ChatOllama(model=self.llm_name, base_url="https://ollama-947388510747.us-central1.run.app")
         self.rag_prompt = ChatPromptTemplate.from_template("""
             You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. 
