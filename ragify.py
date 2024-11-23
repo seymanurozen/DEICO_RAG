@@ -66,10 +66,7 @@ class Ragify:
     #     return qa_pairs
 
     def generate_response(self, question):
-        print(question)
-        answer = self.qa_chain.invoke(question)
-        print(answer)
-        return answer
+        return self.qa_chain.invoke(question)
 
     # def evaluate_responses(self, questions, reference_responses):
     #     chatbot_responses = [self.generate_response(q) for q in questions]
