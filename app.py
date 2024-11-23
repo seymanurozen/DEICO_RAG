@@ -2,7 +2,7 @@ import streamlit as st
 from ragify import Ragify
 
 
-@st.cache_resource
+#@st.cache_resource
 def load_rag_chain(llm_name):
     return Ragify(
         pdf_paths=[
