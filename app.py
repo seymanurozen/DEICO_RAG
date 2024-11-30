@@ -3,13 +3,15 @@ from ragify import Ragify
 
 
 @st.cache_resource
-def load_rag_chain(llm_name):
+def load_rag_chain(llm_name, embedding_name, chunk_size):
     return Ragify(
         pdf_paths=[
             r"./documents/METU_Regulation.pdf",
             r"./documents/ISStudentGuide_2023-2024_v1.5.pdf"
         ],
-        llm_name=llm_name
+        llm_name=llm_name,
+        embedding_name=embedding_name,
+        chunk_size=chunk_size
     )
 
 
@@ -19,7 +21,7 @@ def login(username, password):
     return username == "user" and password == "password"
 
 
-ragify_pipeline = load_rag_chain(llm_name="llama3.2:1b")
+ragify_pipeline = load_rag_chain(llm_name="llama3.2:1b", embedding_name="nomic-embed-text", chunk_size=1000)
 # Initialize session state for user login and conversation history
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
