@@ -25,10 +25,10 @@ class Ragify:
         self.all_data = [doc for loader in self.loader for doc in loader.load()]
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         self.all_splits = self.text_splitter.split_documents(self.all_data)
-        self.local_embeddings = OllamaEmbeddings(model="nomic-embed-text", base_url="https://ollama-947388510747.us-central1.run.app")
+        self.local_embeddings = OllamaEmbeddings(model="nomic-embed-text")
         # self.vectorstore = Chroma.from_documents(documents=self.all_splits, embedding=self.local_embeddings)
         self.vectorstore = FAISS.from_documents(documents=self.all_splits, embedding=self.local_embeddings)
-        self.model = ChatOllama(model=self.llm_name, base_url="https://ollama-947388510747.us-central1.run.app")
+        self.model = ChatOllama(model=self.llm_name)
         self.rag_prompt = ChatPromptTemplate.from_template("""
             You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. 
             If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
