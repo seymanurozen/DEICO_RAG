@@ -21,7 +21,7 @@ def login(username, password):
     return username == "user" and password == "password"
 
 
-ragify_pipeline = load_rag_chain(llm_name="llama3.2:1b", embedding_name="nomic-embed-text", chunk_size=1000)
+ragify_pipeline = load_rag_chain(llm_name="llama3.2:latest", embedding_name="nomic-embed-text", chunk_size=1000)
 # Initialize session state for user login and conversation history
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
