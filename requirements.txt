@@ -11,3 +11,4 @@ fitz==0.0.1.dev2
 nltk==3.9.1
 rouge==1.0.1
 PyMuPDF==1.24.14
+PyYAML==6.0.2
