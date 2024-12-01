@@ -178,6 +178,16 @@ if __name__ == "__main__":
     ]
     Q_path = r"./documents/QandA.pdf"
 
+    example_chat_history = [
+        {
+            'content': 'Who is Tuğba Taşkaya Temizel?',
+            'role': 'user'},
+        {
+            'content': ('Tuğba Taşkaya Temizel is a Professor. Her room number is A-211, phone number is 7782, and email address is ttemizel[at]metu.edu.tr.', 8.58181118965149),
+            'role': 'assistant'
+        }
+    ]
+
     # # Version 1
     # rag_pipeline = Ragify(
     #     pdf_paths=pdf_paths,
