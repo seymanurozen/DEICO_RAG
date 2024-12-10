@@ -2,6 +2,19 @@ import streamlit as st
 from ragify import Ragify
 import yaml
 
+
+USER_DETAILS = {
+    "user": {
+        "password": "password",
+        "chat_history": []
+    },
+    "admin": {
+        "password": "password",
+        "chat_history": []
+    }
+}
+
+
 @st.cache_resource
 def load_rag_chain(llm_name, embedding_name, chunk_size):
     return Ragify(
@@ -18,7 +31,10 @@ def load_rag_chain(llm_name, embedding_name, chunk_size):
 # Function to create user login
 def login(username, password):
     # a simple user verification for demo purposes
-    return username == "user" and password == "password"
+    if username in list(USER_DETAILS.keys()):
+        if password == USER_DETAILS[username]["password"]:
+            return True
+    return False
 
 
 # Initialize session state for user login and conversation history
@@ -59,10 +75,15 @@ if not st.session_state['logged_in']:
 
 # Main Chatbot Application
 if st.session_state['logged_in']:
+    if st.session_state["username"] == "admin":
+        selected_model = st.sidebar.selectbox("Please select an LLM model", config["model_list"])
+        selected_embedder = st.sidebar.selectbox("Please select an embedder", config["embedder_list"])
+        selected_chunk_size = st.sidebar.number_input("Please select a chunk size", value=1000, step=100)
+    else:
+        selected_model = "llama3.2:latest"
+        selected_embedder = "nomic-embed-text"
+        selected_chunk_size = 1000
 
-    selected_model = st.sidebar.selectbox("Please select an LLM model", config["model_list"])
-    selected_embedder = st.sidebar.selectbox("Please select an embedder", config["embedder_list"])
-    selected_chunk_size = st.sidebar.number_input("Please select a chunk size", value=1000, step=100)
 
     st.sidebar.write("---")  # Divider for better organization
     st.session_state['current_chat'] = st.sidebar.selectbox("Previous chats list", list(st.session_state['chats'].keys()), index=len(list(st.session_state['chats'].keys()))-1)
