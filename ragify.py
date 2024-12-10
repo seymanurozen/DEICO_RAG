@@ -7,16 +7,17 @@ from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 from langchain_ollama import OllamaEmbeddings
-import fitz
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from rouge import Rouge
 import numpy as np
+import pandas as pd
+
 
 class Ragify:
     def __init__(self, pdf_paths,
-                 llm_name = "llama3.2:1b",
-                 embedding_name = "nomic-embed-text",
-                 chunk_size = 1000):
+                 llm_name="llama3.2:1b",
+                 embedding_name="nomic-embed-text",
+                 chunk_size=1000):
         self.pdf_paths = pdf_paths
         self.llm_name = llm_name
         self.embedding_name = embedding_name
@@ -52,36 +53,16 @@ class Ragify:
             | StrOutputParser()
         )
 
-
     def format_docs(self, docs):
         return "\n\n".join(doc.page_content for doc in docs)
 
-    def generate_response(self, question):
+    def generate_response(self, question, chat_history=[]):
         start_time = time.time()
         response = self.qa_chain.invoke(question)
         time_taken = time.time() - start_time
         return response, time_taken
 
-
-    def extract_qa_from_pdf(self, Q_path):
-        qa_pairs = []
-        with fitz.open(Q_path) as doc:
-            for page in doc:
-                text = page.get_text()
-                lines = text.splitlines()
-                for i, line in enumerate(lines):
-                    if line.startswith("Q:"):
-                        question = line.replace("Q: ", "").strip()
-                        if i + 1 < len(lines) and lines[i + 1].startswith("A:"):
-                            answer = lines[i + 1].replace("A: ", "").strip()
-                            qa_pairs.append((question, answer))
-        return qa_pairs
-
-
-
-
-
-    def evaluate_responses(self, questions, reference_responses):
+    def evaluate_responses(self, questions, reference_responses, grouped_reference_chunks):
         chatbot_responses = []
         response_times = []
 
@@ -90,24 +71,33 @@ class Ragify:
             chatbot_responses.append(response)
             response_times.append(time_taken)
 
-        precision_k = self.calculate_precision_k(chatbot_responses, reference_responses, k=75)
+        precision_k = rag_pipeline.calculate_precision_k(questions, grouped_reference_chunks, top_k=3)
         rouge_scores = self.calculate_rouge_scores(chatbot_responses, reference_responses)
         bleu_score = self.calculate_bleu_scores(chatbot_responses, reference_responses)
-        rag_metrics = self.calculate_rag_metrics(chatbot_responses, reference_responses)
 
-        return chatbot_responses, response_times, precision_k, rouge_scores, bleu_score, rag_metrics
+        return chatbot_responses, response_times, precision_k, rouge_scores, bleu_score
 
+    def calculate_precision_k(self, questions, grouped_reference_chunks, top_k=3):
+        """
+        Calculate Precision@k for retrieved chunks vs. grouped reference chunks.
+        """
+        match = 0
 
-    def calculate_precision_k(self, chatbot_responses, reference_responses, k=1):
-        precisions = []
-        for i in range(len(chatbot_responses)):
-            chatbot_tokens = set(chatbot_responses[i].split())
-            reference_tokens = set(reference_responses[i].split())
-            intersection = chatbot_tokens.intersection(reference_tokens)
-            precision = len(intersection) / min(k, len(chatbot_tokens))
-            precisions.append(precision)
-        return {"mean": np.mean(precisions), "std": np.std(precisions)}
+        for i, (question, ref_chunks) in enumerate(zip(questions, grouped_reference_chunks)):
 
+            # Retrieve relevant chunks for the question
+            retrieved_docs = self.retriever.get_relevant_documents(question)
+            retrived_chunks = ""
+            for doc in retrieved_docs[:min(top_k, len(retrieved_docs))]:
+                retrived_chunks += doc.page_content.strip().lower().replace("\n", "")
+
+            # Normalize reference chunks
+            ref_chunks_list = [chunk for chunk in ref_chunks.strip().lower().split()]
+
+            if ref_chunks.strip().lower() in retrived_chunks:
+                match += 1
+
+        return {"mean": match / len(questions)}
 
     def calculate_rouge_scores(self, chatbot_responses, reference_responses):
         rouge_evaluator = Rouge()
@@ -115,11 +105,10 @@ class Ragify:
 
         for hyp, ref in zip(chatbot_responses, reference_responses):
             if hyp and ref:
-                scores = rouge_evaluator.get_scores(hyp, ref, avg=False)
+                scores = rouge_evaluator.get_scores(hyp.strip().lower(), ref.strip().lower(), avg=False)
                 for metric in metrics.keys():
-                    metrics[metric].append(scores[0][metric])  # Appending ROUGE-1, ROUGE-2, ROUGE-L
+                    metrics[metric].append(scores[0][metric])
 
-        # Compute mean and std for each metric
         return {
             metric: {
                 "mean": {
@@ -136,48 +125,27 @@ class Ragify:
             for metric in metrics
         }
 
-
     def calculate_bleu_scores(self, chatbot_responses, reference_responses):
-        smoothing = SmoothingFunction().method4
         scores = []
         for hyp, ref in zip(chatbot_responses, reference_responses):
             if hyp and ref:
-                score = sentence_bleu([ref.split()], hyp.split(), smoothing_function=smoothing)
+                score = sentence_bleu([ref.strip().lower().split()], hyp.strip().lower().split(),
+                                      smoothing_function=SmoothingFunction().method4)
                 scores.append(score)
         return {"mean": np.mean(scores), "std": np.std(scores)}
 
 
-    def calculate_rag_metrics(self, chatbot_responses, reference_responses):
-        precision_scores, recall_scores, f1_scores = [], [], []
-        for chatbot_response, reference_response in zip(chatbot_responses, reference_responses):
-            chatbot_tokens = set(chatbot_response.split())
-            reference_tokens = set(reference_response.split())
-
-            true_positives = len(reference_tokens.intersection(chatbot_tokens))
-            false_positives = len(chatbot_tokens.difference(reference_tokens))
-            false_negatives = len(reference_tokens.difference(chatbot_tokens))
-
-            precision = true_positives / (true_positives + false_positives + 1e-10)
-            recall = true_positives / (true_positives + false_negatives + 1e-10)
-            f1 = 2 * precision * recall / (precision + recall + 1e-10)
-
-            precision_scores.append(precision)
-            recall_scores.append(recall)
-            f1_scores.append(f1)
-
-        return {
-            "Precision": {"mean": np.mean(precision_scores), "std": np.std(precision_scores)},
-            "Recall": {"mean": np.mean(recall_scores), "std": np.std(recall_scores)},
-            "F1 Score": {"mean": np.mean(f1_scores), "std": np.std(f1_scores)},
-        }
-
-
 if __name__ == "__main__":
+
+    qna_df = pd.read_excel(r"documents/Questions_Answers_ContainingParagraph.xlsx")
+    questions = qna_df["Question"].tolist()
+    reference_responses = qna_df["Answer"].tolist()
+    grouped_reference_chunks = qna_df["Containing Paragraph from the Document"].tolist()
+
     pdf_paths = [
-        r"./documents/METU_Regulation.pdf",
-        r"./documents/ISStudentGuide_2023-2024_v1.5.pdf"
+        r"documents/METU_Regulation.pdf",
+        r"documents/ISStudentGuide_2023-2024_v1.5.pdf"
     ]
-    Q_path = r"./documents/QandA.pdf"
 
     example_chat_history = [
         {
@@ -237,16 +205,11 @@ if __name__ == "__main__":
         chunk_size=2000
     )
 
-    qa_pairs = rag_pipeline.extract_qa_from_pdf(Q_path)
-    questions = [qa[0] for qa in qa_pairs]
-    reference_responses = [qa[1] for qa in qa_pairs]
+    # Evaluate Responses
+    chatbot_responses, response_times, precision_k, rouge_scores, bleu_score = rag_pipeline.evaluate_responses(questions, reference_responses, grouped_reference_chunks)
 
-    chatbot_responses, response_times, precision_k, rouge_scores, bleu_score, rag_metrics = rag_pipeline.evaluate_responses(questions, reference_responses)
-
-    # Detailed Outputs
-    print("Chatbot Responses and Evaluation:")
     for i, (question, chatbot_response, time_taken) in enumerate(zip(questions, chatbot_responses, response_times)):
-        print(f"Q{i+1}: {question}")
+        print(f"Q{i + 1}: {question}")
         print(f"Chatbot Response: {chatbot_response}")
         print(f"Reference Answer: {reference_responses[i]}")
         print(f"Response Time: {time_taken:.4f} seconds")
@@ -254,12 +217,8 @@ if __name__ == "__main__":
 
     for rouge_type, scores in rouge_scores.items():
         print(f"{rouge_type.upper()}:")
-        print(f"  Precision: Mean={scores['mean']['precision']:.4f}, Std={scores['std']['precision']:.4f}")
-        print(f"  Recall: Mean={scores['mean']['recall']:.4f}, Std={scores['std']['recall']:.4f}")
-        print(f"  F1: Mean={scores['mean']['f1']:.4f}, Std={scores['std']['f1']:.4f}")
-
-    print(f"Precision@k: Mean={precision_k['mean']:.2f}, Std={precision_k['std']:.2f}")
-    print(f"BLEU: Mean={bleu_score['mean']:.4f}, Std={bleu_score['std']:.4f}")
-    print("RAG Metrics:")
-    for metric, stats in rag_metrics.items():
-        print(f"{metric}: Mean={stats['mean']:.4f}, Std={stats['std']:.4f}")
+        print(f"Precision: Mean={scores['mean']['precision']:.4f}, Std={scores['std']['precision']:.4f}")
+        print(f"Recall: Mean={scores['mean']['recall']:.4f}, Std={scores['std']['recall']:.4f}")
+        print(f"F1: Mean={scores['mean']['f1']:.4f}, Std={scores['std']['f1']:.4f}")
+        print(f"Precision@k: Mean={precision_k['mean']:.2f}")
+        print(f"BLEU: Mean={bleu_score['mean']:.4f}, Std={bleu_score['std']:.4f}")
