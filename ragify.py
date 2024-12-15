@@ -4,7 +4,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.runnables import RunnablePassthrough
 from langchain_community.vectorstores import FAISS
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_ollama import ChatOllama
 from langchain_ollama import OllamaEmbeddings
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
@@ -34,33 +35,61 @@ class Ragify:
 
         self.model = ChatOllama(model=self.llm_name)
         self.rag_prompt = ChatPromptTemplate.from_template("""
-            You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. 
-            If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
-
-            <context>
-            {context}
-            </context>
-
-            Answer the following question:
-
-            {question}""")
+        You are an assistant specialized in providing information about the 'Rules and Regulations Governing Graduate Studies' at METU.
+        Use ONLY the provided context to answer the question. Do not use outside knowledge.
+            
+         <context>
+         {context}
+         </context>
+         
+         Below is the conversation so far:
+         {chat_history}
+         
+         Answer the following question:
+         {question}
+         """
+        )
 
         self.retriever = self.vectorstore.as_retriever()
-        self.qa_chain = (
-            {"context": self.retriever | self.format_docs, "question": RunnablePassthrough()}
-            | self.rag_prompt
-            | self.model
-            | StrOutputParser()
-        )
+
+
+    def format_chat_history(self, chat_history):
+        formatted_history = ""
+        for turn in chat_history:
+            role = "User" if turn["role"] == "user" else "Assistant"
+            # If the assistant response is a tuple (response, time), extract just the response text
+            if isinstance(turn["content"], tuple):
+                content = turn["content"][0]
+            else:
+                content = turn["content"]
+            formatted_history += f"{role}: {content}\n"
+        return formatted_history.strip()
+
 
     def format_docs(self, docs):
         return "\n\n".join(doc.page_content for doc in docs)
 
+
     def generate_response(self, question, chat_history=[]):
         start_time = time.time()
-        response = self.qa_chain.invoke(question)
+
+        # Do retrieval and formatting
+        retrieved_docs = self.retriever.get_relevant_documents(question)
+        formatted_context = self.format_docs(retrieved_docs)
+        formatted_chat_history = self.format_chat_history(chat_history)
+
+        # Update the prompt
+        prompt = self.rag_prompt.format(
+            context=formatted_context,
+            question=question,
+            chat_history=formatted_chat_history
+        )
+
+        response = self.model.invoke(prompt)
+
         time_taken = time.time() - start_time
-        return response, time_taken
+        return response.content, time_taken
+
 
     def evaluate_responses(self, questions, reference_responses, grouped_reference_chunks):
         chatbot_responses = []
@@ -76,6 +105,7 @@ class Ragify:
         bleu_score = self.calculate_bleu_scores(chatbot_responses, reference_responses)
 
         return chatbot_responses, response_times, precision_k, rouge_scores, bleu_score
+
 
     def calculate_precision_k(self, questions, grouped_reference_chunks, top_k=3):
         """
@@ -98,6 +128,7 @@ class Ragify:
                 match += 1
 
         return {"mean": match / len(questions)}
+
 
     def calculate_rouge_scores(self, chatbot_responses, reference_responses):
         rouge_evaluator = Rouge()
@@ -124,6 +155,7 @@ class Ragify:
             }
             for metric in metrics
         }
+
 
     def calculate_bleu_scores(self, chatbot_responses, reference_responses):
         scores = []
@@ -157,13 +189,18 @@ if __name__ == "__main__":
         }
     ]
 
-    # # Version 1
-    # rag_pipeline = Ragify(
-    #     pdf_paths=pdf_paths,
-    #     llm_name="llama3.2:1b",
-    #     embedding_name="nomic-embed-text",
-    #     chunk_size=1000
-    # )
+    # Version 1
+    rag_pipeline = Ragify(
+        pdf_paths=pdf_paths,
+        llm_name="llama3.2:1b",
+        embedding_name="nomic-embed-text",
+        chunk_size=1000
+    )
+
+    response, time_taken = rag_pipeline.generate_response("What is her email address?", chat_history=example_chat_history)
+    print("Response:", response)
+    print("Time taken:", time_taken)
+
 
     # # Version 2
     # rag_pipeline = Ragify(
@@ -197,28 +234,28 @@ if __name__ == "__main__":
     #     chunk_size=500
     # )
 
-    # Version 6
-    rag_pipeline = Ragify(
-        pdf_paths=pdf_paths,
-        llm_name="llama3.2:latest",
-        embedding_name="nomic-embed-text",
-        chunk_size=2000
-    )
-
-    # Evaluate Responses
-    chatbot_responses, response_times, precision_k, rouge_scores, bleu_score = rag_pipeline.evaluate_responses(questions, reference_responses, grouped_reference_chunks)
-
-    for i, (question, chatbot_response, time_taken) in enumerate(zip(questions, chatbot_responses, response_times)):
-        print(f"Q{i + 1}: {question}")
-        print(f"Chatbot Response: {chatbot_response}")
-        print(f"Reference Answer: {reference_responses[i]}")
-        print(f"Response Time: {time_taken:.4f} seconds")
-        print()
-
-    for rouge_type, scores in rouge_scores.items():
-        print(f"{rouge_type.upper()}:")
-        print(f"Precision: Mean={scores['mean']['precision']:.4f}, Std={scores['std']['precision']:.4f}")
-        print(f"Recall: Mean={scores['mean']['recall']:.4f}, Std={scores['std']['recall']:.4f}")
-        print(f"F1: Mean={scores['mean']['f1']:.4f}, Std={scores['std']['f1']:.4f}")
-        print(f"Precision@k: Mean={precision_k['mean']:.2f}")
-        print(f"BLEU: Mean={bleu_score['mean']:.4f}, Std={bleu_score['std']:.4f}")
+    # # Version 6
+    # rag_pipeline = Ragify(
+    #     pdf_paths=pdf_paths,
+    #     llm_name="llama3.2:latest",
+    #     embedding_name="nomic-embed-text",
+    #     chunk_size=2000
+    # )
+    #
+    # # Evaluate Responses
+    # chatbot_responses, response_times, precision_k, rouge_scores, bleu_score = rag_pipeline.evaluate_responses(questions, reference_responses, grouped_reference_chunks)
+    #
+    # for i, (question, chatbot_response, time_taken) in enumerate(zip(questions, chatbot_responses, response_times)):
+    #     print(f"Q{i + 1}: {question}")
+    #     print(f"Chatbot Response: {chatbot_response}")
+    #     print(f"Reference Answer: {reference_responses[i]}")
+    #     print(f"Response Time: {time_taken:.4f} seconds")
+    #     print()
+    #
+    # for rouge_type, scores in rouge_scores.items():
+    #     print(f"{rouge_type.upper()}:")
+    #     print(f"Precision: Mean={scores['mean']['precision']:.4f}, Std={scores['std']['precision']:.4f}")
+    #     print(f"Recall: Mean={scores['mean']['recall']:.4f}, Std={scores['std']['recall']:.4f}")
+    #     print(f"F1: Mean={scores['mean']['f1']:.4f}, Std={scores['std']['f1']:.4f}")
+    #     print(f"Precision@k: Mean={precision_k['mean']:.2f}")
+    #     print(f"BLEU: Mean={bleu_score['mean']:.4f}, Std={bleu_score['std']:.4f}")
