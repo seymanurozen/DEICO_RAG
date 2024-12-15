@@ -123,7 +123,7 @@ if st.session_state['logged_in']:
         # Simulate assistant response
         with st.chat_message("assistant"):
             with st.spinner("Responding..."):
-                response, time_collapsed = ragify_pipeline.generate_response(question=question)
+                response, time_collapsed = ragify_pipeline.generate_response(question=question, chat_history=st.session_state['chat_history'])
             st.markdown(response)
             st.session_state['chat_history'].append({"role": "assistant", "content": response})
 
