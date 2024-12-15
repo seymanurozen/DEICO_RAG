@@ -28,4 +28,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 8080
 
 # Start both Ollama and the Streamlit app
-CMD ["bash", "-c", "ollama serve & streamlit run your_streamlit_app.py --server.port=8080 --server.address=0.0.0.0"]
+CMD ["bash", "-c", "ollama serve & streamlit run app.py --server.port=8080 --server.address=0.0.0.0"]
