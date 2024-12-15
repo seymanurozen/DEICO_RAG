@@ -1,11 +1,8 @@
 import time
-from langchain_core.output_parsers import StrOutputParser
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_core.runnables import RunnablePassthrough
 from langchain_community.vectorstores import FAISS
-from langchain_core.messages import HumanMessage, AIMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 from langchain_ollama import OllamaEmbeddings
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
@@ -103,8 +100,9 @@ class Ragify:
         precision_k = rag_pipeline.calculate_precision_k(questions, grouped_reference_chunks, top_k=3)
         rouge_scores = self.calculate_rouge_scores(chatbot_responses, reference_responses)
         bleu_score = self.calculate_bleu_scores(chatbot_responses, reference_responses)
+        avg_response_time = np.mean(response_times)
 
-        return chatbot_responses, response_times, precision_k, rouge_scores, bleu_score
+        return chatbot_responses, response_times, precision_k, rouge_scores, bleu_score, avg_response_time
 
 
     def calculate_precision_k(self, questions, grouped_reference_chunks, top_k=3):
