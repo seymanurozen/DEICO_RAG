@@ -79,13 +79,13 @@ if st.session_state['logged_in']:
         selected_model = st.sidebar.selectbox("Please select an LLM model", config["model_list"])
         selected_embedder = st.sidebar.selectbox("Please select an embedder", config["embedder_list"])
         selected_chunk_size = st.sidebar.number_input("Please select a chunk size", value=1000, step=100)
+        st.sidebar.write("---")  # Divider for better organization
+
     else:
         selected_model = "llama3.2:latest"
         selected_embedder = "nomic-embed-text"
         selected_chunk_size = 1000
 
-
-    st.sidebar.write("---")  # Divider for better organization
     st.session_state['current_chat'] = st.sidebar.selectbox("Previous chats list", list(st.session_state['chats'].keys()), index=len(list(st.session_state['chats'].keys()))-1)
 
     # Section to create a new chat
