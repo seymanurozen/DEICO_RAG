@@ -37,6 +37,16 @@ def login(username, password):
     return False
 
 
+def register(username, password):
+    if username in list(USER_DETAILS.keys()):
+        return False
+    else:
+        USER_DETAILS[username] = {}
+        USER_DETAILS[username]["password"] = password
+        USER_DETAILS[username]["chat_history"] = []
+        return True
+
+
 # Initialize session state for user login and conversation history
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
@@ -56,15 +66,17 @@ if not st.session_state['logged_in']:
     st.title("Ragify - Login")
 
     # Create a form for username and password inputs
-    with st.form("login_form"):
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        
-        # Use form submit button for Enter key support
-        submit_button = st.form_submit_button("Login")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    col1, col2, col3 = st.columns([1,1,5])
+    with col1:
+        login_button = st.button("Login")
+    with col2:
+        register_button = st.button("Register")
 
     # Handle login logic
-    if submit_button:
+    if login_button:
         if login(username, password):
             st.session_state['logged_in'] = True
             st.session_state['username'] = username
@@ -72,6 +84,15 @@ if not st.session_state['logged_in']:
             st.rerun()  # Reload the app
         else:
             st.error("Invalid credentials. Please try again.")
+    if register_button:
+        if register(username, password):
+            st.session_state['logged_in'] = True
+            st.session_state['username'] = username
+            st.success("Registered successfully!")
+            st.rerun()
+        else:
+            st.error("User already exists. Please try again.")
+
 
 # Main Chatbot Application
 if st.session_state['logged_in']:
