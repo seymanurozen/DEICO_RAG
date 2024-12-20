@@ -11,6 +11,7 @@ RUN curl -O https://ollama.ai/install.sh && \
 
 RUN ollama serve & sleep 5 && ollama pull llama3.2:1b
 RUN ollama serve & sleep 5 && ollama pull llama3.2:3b
+RUN ollama serve & sleep 5 && ollama pull llama3.2:latest
 RUN ollama serve & sleep 5 && ollama pull nomic-embed-text
 RUN ollama serve & sleep 5 && ollama pull mxbai-embed-large
 
