@@ -1,0 +1,14 @@
+{
+    "user": {
+        "password": "password",
+        "chat_history": {
+            "default": []
+        }
+    },
+    "admin": {
+        "password": "password",
+        "chat_history": {
+            "default": []
+        }
+    }
+}

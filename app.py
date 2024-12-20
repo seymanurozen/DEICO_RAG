@@ -1,19 +1,13 @@
 import streamlit as st
 from ragify import Ragify
 import yaml
+import json
 
+with open("config.yml", "r") as file:
+    config = yaml.safe_load(file)
 
-USER_DETAILS = {
-    "user": {
-        "password": "password",
-        "chat_history": []
-    },
-    "admin": {
-        "password": "password",
-        "chat_history": []
-    }
-}
-
+with open('user_database.json', 'r') as file:
+    USER_DETAILS = json.load(file)
 
 @st.cache_resource
 def load_rag_chain(llm_name, embedding_name, chunk_size):
@@ -41,25 +35,28 @@ def register(username, password):
     if username in list(USER_DETAILS.keys()):
         return False
     else:
-        USER_DETAILS[username] = {}
-        USER_DETAILS[username]["password"] = password
-        USER_DETAILS[username]["chat_history"] = []
+        USER_DETAILS[username] = {
+            "password": password,
+            "chat_history":
+                {"default": []}
+        }
         return True
+
+def specific_rerun():
+    with open('user_database.json', 'w') as file:
+        json.dump(USER_DETAILS, file, indent=4)
+    st.rerun()
 
 
 # Initialize session state for user login and conversation history
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
-    st.session_state['username'] = "Guest"
-if 'chat_history' not in st.session_state:
-    st.session_state['chat_history'] = []
-if 'chats' not in st.session_state:
-    st.session_state['chats'] = {}  # Dictionary to hold multiple chat histories
-if 'current_chat' not in st.session_state:
-    st.session_state['current_chat'] = "Default Chat"
-
-with open("config.yml", "r") as file:
-    config = yaml.safe_load(file)
+# if 'chat_history' not in st.session_state:
+#     st.session_state['chat_history'] = []
+# if 'chats' not in st.session_state:
+#     st.session_state['chats'] = {}  # Dictionary to hold multiple chat histories
+# if 'current_chat' not in st.session_state:
+#     st.session_state['current_chat'] = "Default Chat"
 
 # Create login form
 if not st.session_state['logged_in']:
@@ -81,7 +78,7 @@ if not st.session_state['logged_in']:
             st.session_state['logged_in'] = True
             st.session_state['username'] = username
             st.success("Logged in successfully!")
-            st.rerun()  # Reload the app
+            specific_rerun()  # Reload the app
         else:
             st.error("Invalid credentials. Please try again.")
     if register_button:
@@ -89,7 +86,7 @@ if not st.session_state['logged_in']:
             st.session_state['logged_in'] = True
             st.session_state['username'] = username
             st.success("Registered successfully!")
-            st.rerun()
+            specific_rerun()
         else:
             st.error("User already exists. Please try again.")
 
@@ -107,16 +104,15 @@ if st.session_state['logged_in']:
         selected_embedder = "nomic-embed-text"
         selected_chunk_size = 1000
 
-    st.session_state['current_chat'] = st.sidebar.selectbox("Previous chats list", list(st.session_state['chats'].keys()), index=len(list(st.session_state['chats'].keys()))-1)
+    current_chat_name = st.sidebar.selectbox("Previous chats list", list(USER_DETAILS[st.session_state['username']]["chat_history"].keys()), index=len(list(USER_DETAILS[st.session_state['username']]["chat_history"].keys()))-1)
 
     # Section to create a new chat
 
     new_chat_name = st.sidebar.text_input("Enter a name for the new chat")
     if st.sidebar.button("Create Chat"):
-        if new_chat_name and new_chat_name not in st.session_state['chats']:
-            st.session_state['chats'][new_chat_name] = []  # Initialize new chat history
-            st.session_state['current_chat'] = new_chat_name
-            st.rerun()  # Reload to reflect the new chat
+        if new_chat_name and new_chat_name not in USER_DETAILS[st.session_state['username']]["chat_history"].keys():
+            USER_DETAILS[st.session_state['username']]["chat_history"][new_chat_name] = []  # Initialize new chat history
+            specific_rerun() # Reload to reflect the new chat
         elif new_chat_name:
             st.sidebar.error("Chat name must be unique and non-empty.")
 
@@ -124,11 +120,9 @@ if st.session_state['logged_in']:
     with col2:
         # st.image(r"./images/ragify_logo.jpg")
         st.header("Ragify")
-    # Check if a current chat is selected and load its history
-    st.session_state['chat_history'] = st.session_state['chats'].get(st.session_state['current_chat'], [])
 
     # Display chat messages from the selected chat
-    for message in st.session_state['chat_history']:
+    for message in USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name]:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
@@ -139,14 +133,20 @@ if st.session_state['logged_in']:
         # Display user input
         with st.chat_message("user"):
             st.markdown(question)
-        st.session_state['chat_history'].append({"role": "user", "content": question})
 
         # Simulate assistant response
         with st.chat_message("assistant"):
             with st.spinner("Responding..."):
-                response, time_collapsed = ragify_pipeline.generate_response(question=question, chat_history=st.session_state['chat_history'])
-            st.markdown(response)
-            st.session_state['chat_history'].append({"role": "assistant", "content": response})
+                response, time_collapsed = ragify_pipeline.generate_response(
+                    question=question,
+                    chat_history=USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name]
+                )
 
-        # Update the chat history in the selected chat
-        st.session_state['chats'][st.session_state['current_chat']] = st.session_state['chat_history']
+            st.markdown(response)
+        USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name].append(
+            {"role": "user", "content": question})
+        USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name].append(
+            {"role": "assistant", "content": response})
+
+        with open('user_database.json', 'w') as file:
+            json.dump(USER_DETAILS, file, indent=4)
