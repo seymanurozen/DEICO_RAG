@@ -4,8 +4,8 @@ import yaml
 import json
 import base64
 
-# Set Streamlit page config (title)
-st.set_page_config(page_title="Ragify")
+# Set Streamlit page config (title and page icon)
+st.set_page_config(page_title="Ragify", page_icon=r"images/logo_light.png")
 
 # Hide Streamlit's default hamburger menu and footer
 hide_streamlit_style = """
@@ -160,8 +160,8 @@ background_image = dark_mode_image if st.session_state['theme'] else light_mode_
 
 # Determine which logo to use based on the theme
 logo_image = (
-    r"images/logo_dark.jpg"
-    if st.session_state['theme'] else r"images/logo_light.jpg"
+    r"images/logo_dark.png"
+    if st.session_state['theme'] else r"images/logo_light.png"
 )
 
 # Header text, styled according to the theme
