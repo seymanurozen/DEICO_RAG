@@ -75,14 +75,15 @@ if not st.session_state['logged_in']:
     light_mode_image = get_base64_image(light_mode_image_path)
     dark_mode_image = get_base64_image(dark_mode_image_path)
 
+
     # Create a manual toggle for Light or Dark mode
     col1, col2, col3 = st.columns([5,1,1])
-    with col3: 
-        theme_choice = st.radio("Select Theme", ["Light", "Dark"], index=0)
-    
+    with col3:         
+        theme_choice = st.radio("Select Theme", [":rainbow[Light]", ":rainbow[Dark]"], index=0)
+        
 
     # Choose the background image based on the selected theme
-    background_image = dark_mode_image if theme_choice == "Dark" else light_mode_image
+    background_image = dark_mode_image if theme_choice == ":rainbow[Dark]" else light_mode_image
 
 
 
@@ -105,8 +106,8 @@ if not st.session_state['logged_in']:
    
       
     # Choose the background image based on the selected theme
-    background_image = dark_mode_image if theme_choice == "Dark" else light_mode_image
-    if theme_choice == "Dark":
+    background_image = dark_mode_image if theme_choice == ":rainbow[Dark]" else light_mode_image
+    if theme_choice == ":rainbow[Dark]":
         col1, col2, col3 = st.columns(3)
         with col2:
             st.image(r"./images/inverted_logo_image.png", use_column_width=True)
@@ -141,6 +142,7 @@ if not st.session_state['logged_in']:
             unsafe_allow_html=True
         )
 
+
         # Text input fields with white labels
         username = st.text_input("Username")
         password = st.text_input("Password", type="password")
@@ -174,19 +176,18 @@ if not st.session_state['logged_in']:
         # Footer or informational text at the bottom of the page
         st.markdown(
             """
-            <div style="text-align: justify; font-size: 0.9em; margin-top: 50px; border-top: 1px solid #ddd; padding-top: 10px; color:white">
-                This chatbot is prepared by the <strong>Graduate School of Informatics</strong> on <strong>December 2024</strong> 
-                and updated on <strong>December 2024</strong>. Please contact 
-                <strong>Res. Assist. Şeyma Şimşek</strong> at 
-                <a href="mailto:sseyma@metu.edu.tr" style="text-decoration: none; color: blue;">
-                    sseyma@metu.edu.tr
-                </a> 
-                for further information.
+            <div style="text-align: justify; font-size: 0.9em; margin-top: 50px; border-top: 1px solid #ddd; padding-top: 10px; color: white;">
+            This chatbot was developed by the <strong>Ragify team</strong>, including Barış Coşkun, Laya Moridsedaghat, Şeymanur Özen, and Şeyma Şimşek, on behalf of the <strong>Graduate School of Informatics</strong>. It was first released in <strong>December 2024</strong> and last updated in <strong>December 2024</strong>. For further inquiries, please contact <strong>Res. Assist. Şeyma Şimşek</strong> at 
+            <a href="mailto:sseyma@metu.edu.tr" style="text-decoration: none; color: lightblue;">
+            sseyma@metu.edu.tr
+            </a>.
             </div>
+
             """,
             unsafe_allow_html=True
             
             ) 
+        
     else:
         col1, col2, col3 = st.columns(3)
         with col2:
@@ -238,14 +239,12 @@ if not st.session_state['logged_in']:
         st.markdown(
             """
             <div style="text-align: justify; font-size: 0.9em; margin-top: 50px; border-top: 1px solid #ddd; padding-top: 10px;">
-                This chatbot is prepared by the <strong>Graduate School of Informatics</strong> on <strong>December 2024</strong> 
-                and updated on <strong>December 2024</strong>. Please contact 
-                <strong>Res. Assist. Şeyma Şimşek</strong> at 
-                <a href="mailto:sseyma@metu.edu.tr" style="text-decoration: none; color: blue;">
-                    sseyma@metu.edu.tr
-                </a> 
-                for further information.
+            This chatbot was developed by the <strong>Ragify team</strong>, including Barış Coşkun, Laya Moridsedaghat, Şeymanur Özen, and Şeyma Şimşek, on behalf of the <strong>Graduate School of Informatics</strong>. It was first released in <strong>December 2024</strong> and last updated in <strong>December 2024</strong>. For further inquiries, please contact <strong>Res. Assist. Şeyma Şimşek</strong> at 
+            <a href="mailto:sseyma@metu.edu.tr" style="text-decoration: none; color: blue;">
+            sseyma@metu.edu.tr
+            </a>.
             </div>
+
             """,
             unsafe_allow_html=True
             
@@ -278,6 +277,19 @@ if st.session_state['logged_in']:
             specific_rerun() # Reload to reflect the new chat
         elif new_chat_name:
             st.sidebar.error("Chat name must be unique and non-empty.")
+    
+    st.sidebar.markdown("""
+        <div style="text-align: justify; font-size: 0.9em; margin-top: 50px; border-top: 1px solid #ddd; padding-top: 10px;">
+            This chatbot was developed by the <strong>Ragify team</strong>, including Barış Coşkun, 
+            Laya Moridsedaghat, Şeymanur Özen, and Şeyma Şimşek, on behalf of the 
+            <strong>Graduate School of Informatics</strong>. It was first released in 
+            <strong>December 2024</strong> and last updated in <strong>December 2024</strong>. 
+            For further inquiries, please contact <strong>Res. Assist. Şeyma Şimşek</strong> at 
+            <a href="mailto:sseyma@metu.edu.tr" style="text-decoration: none; color: blue;">
+            sseyma@metu.edu.tr
+            </a>.
+        </div>
+    """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
     with col2:
@@ -302,12 +314,22 @@ if st.session_state['logged_in']:
         with st.chat_message("assistant"):
             with st.spinner("Responding..."):
                 response = f"Simulated response to: {question}"
-                """response, time_collapsed = ragify_pipeline.generate_response(
-                    question=question,
-                    chat_history=USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name]
-                )"""
+                #response, time_collapsed = ragify_pipeline.generate_response(
+                #    question=question,
+                #    chat_history=USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name]
+                #)
 
             st.markdown(response)
+                # Add OK and Not OK buttons under the response
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                if st.button("OK", key=f"ok_{len(USER_DETAILS[st.session_state['username']])}"):
+                    st.info("Thank you for confirming!")
+            with col2:
+                if st.button("Not OK", key=f"not_ok_{len(USER_DETAILS[st.session_state['username']])}"):
+                    st.error("We're sorry to hear that. Please provide feedback!")
+
+
         USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name].append(
             {"role": "user", "content": question})
         USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name].append(
@@ -316,4 +338,6 @@ if st.session_state['logged_in']:
         with open('user_database.json', 'w') as file:
             json.dump(USER_DETAILS, file, indent=4)
 
+            
 
+        
