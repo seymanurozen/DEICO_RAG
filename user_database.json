@@ -2,7 +2,16 @@
     "user": {
         "password": "password",
         "chat_history": {
-            "default": []
+            "default": [
+                {
+                    "role": "user",
+                    "content": "Who is Tu\u011fba Ta\u015fkaya Temizel?"
+                },
+                {
+                    "role": "assistant",
+                    "content": "Tu\u011fba Ta\u015fkaya Temizel is a Prof. Dr., and her room number is A-211, with phone 7782 and email ttemizel[at]metu.edu.tr. Her fields of interest include data mining, text mining, information extraction, grid computing, cloud computing, persuasive technologies, social media analytics, and temporal data mining."
+                }
+            ]
         }
     },
     "admin": {
