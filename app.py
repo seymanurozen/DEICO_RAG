@@ -98,7 +98,7 @@ dark_mode_image = get_base64_image(dark_mode_image_path)
 
 # Choose the background image based on the selected theme
 background_image = dark_mode_image if st.session_state['theme'] else light_mode_image
-logo_image = r"./images/inverted_logo_image.png" if st.session_state['theme'] else r"./images/ragify_logo2.png"
+logo_image = r"images/inverted_logo_image.png" if st.session_state['theme'] else r"images/ragify_logo2.png"
 header = """
         <div style="text-align: justify; color:white;">
             Welcome to <strong>Ragify</strong>, your personalized assistant designed to simplify the complexities of 
