@@ -160,8 +160,8 @@ background_image = dark_mode_image if st.session_state['theme'] else light_mode_
 
 # Determine which logo to use based on the theme
 logo_image = (
-    r"images/inverted_logo_image.png"
-    if st.session_state['theme'] else r"images/ragify_logo2.png"
+    r"images/logo_dark.jpg"
+    if st.session_state['theme'] else r"images/logo_light.jpg"
 )
 
 # Header text, styled according to the theme
@@ -282,15 +282,15 @@ st.markdown(
 # Apply the message layout styling
 st.markdown(message_layout, unsafe_allow_html=True)
 
+# Center the main logo
+col1, col2, col3 = st.columns(3)
+with col2:
+    st.image(logo_image)
+
 # ---------------------
 #  LOGIN/REGISTRATION
 # ---------------------
 if not st.session_state['logged_in']:
-    # Center the login form using columns
-    col1, col2, col3 = st.columns(3)
-    with col2:
-        st.image(logo_image)
-
     # Header and page styling
     st.markdown(header, unsafe_allow_html=True)
     st.markdown(css_layout, unsafe_allow_html=True)
@@ -386,11 +386,6 @@ if st.session_state['logged_in']:
         """,
         unsafe_allow_html=True
     )
-
-    # Center the main logo
-    col1, col2, col3 = st.columns(3)
-    with col2:
-        st.image(logo_image)
 
     # Display the message history for the selected chat
     for message in USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name]:
