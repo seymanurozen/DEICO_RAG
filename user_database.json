@@ -2,7 +2,26 @@
     "user": {
         "password": "password",
         "chat_history": {
-            "default": []
+            "default": [
+                {
+                    "role": "user",
+                    "content": "Who is Tu\u011fba Ta\u015fkaya Temizel?"
+                },
+                {
+                    "role": "assistant",
+                    "content": "According to the provided context, Tu\u011fba Ta\u015fkaya Temizel is a Prof. Dr., specifically in the field of data mining, text mining, information extraction, grid computing, cloud computing, persuasive technologies, and social media analytics and temporal data mining."
+                }
+            ],
+            "new_chat": [
+                {
+                    "role": "user",
+                    "content": "Which courses are included in DCE?"
+                },
+                {
+                    "role": "assistant",
+                    "content": "According to 5.6.2 DCE Rules for IS, the written exam for the DCE includes four specific courses:\n\n1. IS501\n2. IS503\n3. IS504\n4. IS507"
+                }
+            ]
         }
     },
     "admin": {
