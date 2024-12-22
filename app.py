@@ -258,14 +258,6 @@ if st.session_state['logged_in']:
                 )
 
             st.markdown(response)
-                # Add OK and Not OK buttons under the response
-            col1, col2 = st.columns([1, 1])
-            with col1:
-                if st.button("OK", key=f"ok_{len(USER_DETAILS[st.session_state['username']])}"):
-                    st.info("Thank you for confirming!")
-            with col2:
-                if st.button("Not OK", key=f"not_ok_{len(USER_DETAILS[st.session_state['username']])}"):
-                    st.error("We're sorry to hear that. Please provide feedback!")
 
         USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name].append(
             {"role": "user", "content": question})
