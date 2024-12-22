@@ -64,6 +64,16 @@ def specific_rerun():
     st.rerun()
 
 
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+
+
 # Initialize session state for user login and conversation history
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
@@ -119,7 +129,7 @@ if not st.session_state['logged_in']:
             </a>.
             </div>
             """
-    sql_inject = """
+    css_layout = """
             <style>
                 /* Style for text input labels */
                 label {
@@ -128,9 +138,23 @@ if not st.session_state['logged_in']:
 
                 /* Optional: Style for text input boxes */
                 input {
-                    color: white !important;  /* Text inside the input field */
-                    background-color: black !important;  /* Background color of the input field */
-                    border: 1px solid white !important;  /* Optional: Add a white border */
+                    color: white !important;
+                    background-color: black !important;
+                    border: 1px solid white !important;
+                }
+            </style>
+            """ if theme_choice == ":rainbow[Dark]" else"""
+            <style>
+                /* Style for text input labels */
+                label {
+                    color: black !important;
+                }
+
+                /* Optional: Style for text input boxes */
+                input {
+                    color: black !important;
+                    background-color: white !important;
+                    border: 1px solid black !important;
                 }
             </style>
             """
@@ -153,9 +177,9 @@ if not st.session_state['logged_in']:
     col1, col2, col3 = st.columns(3)
     with col2:
         st.image(logo_image, use_column_width=True)
+
     st.markdown(header, unsafe_allow_html=True)
-    if theme_choice == ":rainbow[Dark]":
-        st.markdown(sql_inject,unsafe_allow_html=True)
+    st.markdown(css_layout,unsafe_allow_html=True)
 
     # Text input fields with white labels
     username = st.text_input("Username")
@@ -251,7 +275,6 @@ if st.session_state['logged_in']:
         # Simulate assistant response
         with st.chat_message("assistant"):
             with st.spinner("Responding..."):
-                response = f"Simulated response to: {question}"
                 response, time_collapsed = ragify_pipeline.generate_response(
                    question=question,
                    chat_history=USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name]
