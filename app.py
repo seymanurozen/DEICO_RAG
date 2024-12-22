@@ -1,7 +1,13 @@
 import streamlit as st
-from ragify import Ragify
+#from ragify import Ragify
 import yaml
 import json
+import base64
+
+def get_base64_image(image_path):
+    with open(image_path, "rb") as file:
+        encoded_image = base64.b64encode(file.read()).decode()
+    return encoded_image
 
 with open("config.yml", "r") as file:
     config = yaml.safe_load(file)
@@ -9,17 +15,17 @@ with open("config.yml", "r") as file:
 with open('user_database.json', 'r') as file:
     USER_DETAILS = json.load(file)
 
-@st.cache_resource
-def load_rag_chain(llm_name, embedding_name, chunk_size):
-    return Ragify(
-        pdf_paths=[
-            r"./documents/METU_Regulation.pdf",
-            r"./documents/ISStudentGuide_2023-2024_v1.5.pdf"
-        ],
-        llm_name=llm_name,
-        embedding_name=embedding_name,
-        chunk_size=chunk_size
-    )
+#@st.cache_resource
+#def load_rag_chain(llm_name, embedding_name, chunk_size):
+#    return Ragify(
+#        pdf_paths=[
+#            r"./documents/METU_Regulation.pdf",
+#            r"./documents/ISStudentGuide_2023-2024_v1.5.pdf"
+#        ],
+#        llm_name=llm_name,
+#        embedding_name=embedding_name,
+#        chunk_size=chunk_size
+#    )
 
 
 # Function to create user login
@@ -60,35 +66,191 @@ if 'logged_in' not in st.session_state:
 
 # Create login form
 if not st.session_state['logged_in']:
-    st.title("Ragify - Login")
 
-    # Create a form for username and password inputs
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+    # Paths to the light and dark mode images
+    light_mode_image_path = "images/background_light.jpg"
+    dark_mode_image_path = "images/background_dark.jpg"
 
-    col1, col2, col3 = st.columns([1,1,5])
-    with col1:
-        login_button = st.button("Login")
-    with col2:
-        register_button = st.button("Register")
+    # Encode both images
+    light_mode_image = get_base64_image(light_mode_image_path)
+    dark_mode_image = get_base64_image(dark_mode_image_path)
 
-    # Handle login logic
-    if login_button:
-        if login(username, password):
-            st.session_state['logged_in'] = True
-            st.session_state['username'] = username
-            st.success("Logged in successfully!")
-            specific_rerun()  # Reload the app
-        else:
-            st.error("Invalid credentials. Please try again.")
-    if register_button:
-        if register(username, password):
-            st.session_state['logged_in'] = True
-            st.session_state['username'] = username
-            st.success("Registered successfully!")
-            specific_rerun()
-        else:
-            st.error("User already exists. Please try again.")
+
+    # Create a manual toggle for Light or Dark mode
+    col1, col2, col3 = st.columns([5,1,1])
+    with col3:         
+        theme_choice = st.radio("Select Theme", [":rainbow[Light]", ":rainbow[Dark]"], index=0)
+        
+
+    # Choose the background image based on the selected theme
+    background_image = dark_mode_image if theme_choice == ":rainbow[Dark]" else light_mode_image
+
+
+
+    # Inject CSS for the background image
+    st.markdown(
+        f"""
+        <style>
+            .stApp {{
+                background-image: url("data:image/jpeg;base64,{background_image}");
+                background-size: cover;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+            }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+   
+      
+    # Choose the background image based on the selected theme
+    background_image = dark_mode_image if theme_choice == ":rainbow[Dark]" else light_mode_image
+    if theme_choice == ":rainbow[Dark]":
+        col1, col2, col3 = st.columns(3)
+        with col2:
+            st.image(r"./images/inverted_logo_image.png", use_column_width=True)
+        st.markdown(
+            """
+            <div style="text-align: justify; color:white;">
+                Welcome to <strong>Ragify</strong>, your personalized assistant designed to simplify the complexities of 
+                METU's <em>"Rules and Regulations Governing Graduate Studies."</em> 
+                Ragify helps graduate students navigate enrollment procedures, course requirements, thesis guidelines, and more with ease and confidence.
+            </div>
+            
+            <hr style="border: 1px solid white; background-color: white;">
+            """,
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            """
+            <style>
+                /* Style for text input labels */
+                label {
+                    color: white !important;
+                }
+
+                /* Optional: Style for text input boxes */
+                input {
+                    color: white !important;  /* Text inside the input field */
+                    background-color: black !important;  /* Background color of the input field */
+                    border: 1px solid white !important;  /* Optional: Add a white border */
+                }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+        # Text input fields with white labels
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+
+
+        col1, col2, col3 = st.columns([1,1,5])
+        with col1:
+            login_button = st.button("Login")
+        with col2:
+            register_button = st.button("Register")
+
+        # Handle login logic
+        if login_button:
+            if login(username, password):
+                st.session_state['logged_in'] = True
+                st.session_state['username'] = username
+                st.success("Logged in successfully!")
+                specific_rerun()  # Reload the app
+            else:
+                st.error("Invalid credentials. Please try again.")
+        if register_button:
+            if register(username, password):
+                st.session_state['logged_in'] = True
+                st.session_state['username'] = username
+                st.success("Registered successfully!")
+                specific_rerun()
+            else:
+                st.error("User already exists. Please try again.")
+        
+        
+        # Footer or informational text at the bottom of the page
+        st.markdown(
+            """
+            <div style="text-align: justify; font-size: 0.9em; margin-top: 50px; border-top: 1px solid #ddd; padding-top: 10px; color: white;">
+            This chatbot was developed by the <strong>Ragify team</strong>, including Barış Coşkun, Laya Moridsedaghat, Şeymanur Özen, and Şeyma Şimşek, on behalf of the <strong>Graduate School of Informatics</strong>. It was first released in <strong>December 2024</strong> and last updated in <strong>December 2024</strong>. For further inquiries, please contact <strong>Res. Assist. Şeyma Şimşek</strong> at 
+            <a href="mailto:sseyma@metu.edu.tr" style="text-decoration: none; color: lightblue;">
+            sseyma@metu.edu.tr
+            </a>.
+            </div>
+
+            """,
+            unsafe_allow_html=True
+            
+            ) 
+        
+    else:
+        col1, col2, col3 = st.columns(3)
+        with col2:
+            st.image(r"./images/ragify_logo2.png", use_column_width=True)
+        st.markdown(
+            """
+            <div style="text-align: justify;">
+                Welcome to <strong>Ragify</strong>, your personalized assistant designed to simplify the complexities of 
+                METU's <em>"Rules and Regulations Governing Graduate Studies."</em> 
+                Ragify helps graduate students navigate enrollment procedures, course requirements, thesis guidelines, and more with ease and confidence.
+            </div>
+            
+            <hr>  <!-- Add a horizontal line -->
+            """,
+            unsafe_allow_html=True
+        )
+        #st.title("Ragify - Login")
+
+        # Create a form for username and password inputs
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+
+        col1, col2, col3 = st.columns([1,1,5])
+        with col1:
+            login_button = st.button("Login")
+        with col2:
+            register_button = st.button("Register")
+
+        # Handle login logic
+        if login_button:
+            if login(username, password):
+                st.session_state['logged_in'] = True
+                st.session_state['username'] = username
+                st.success("Logged in successfully!")
+                specific_rerun()  # Reload the app
+            else:
+                st.error("Invalid credentials. Please try again.")
+        if register_button:
+            if register(username, password):
+                st.session_state['logged_in'] = True
+                st.session_state['username'] = username
+                st.success("Registered successfully!")
+                specific_rerun()
+            else:
+                st.error("User already exists. Please try again.")
+        
+        
+        # Footer or informational text at the bottom of the page
+        st.markdown(
+            """
+            <div style="text-align: justify; font-size: 0.9em; margin-top: 50px; border-top: 1px solid #ddd; padding-top: 10px;">
+            This chatbot was developed by the <strong>Ragify team</strong>, including Barış Coşkun, Laya Moridsedaghat, Şeymanur Özen, and Şeyma Şimşek, on behalf of the <strong>Graduate School of Informatics</strong>. It was first released in <strong>December 2024</strong> and last updated in <strong>December 2024</strong>. For further inquiries, please contact <strong>Res. Assist. Şeyma Şimşek</strong> at 
+            <a href="mailto:sseyma@metu.edu.tr" style="text-decoration: none; color: blue;">
+            sseyma@metu.edu.tr
+            </a>.
+            </div>
+
+            """,
+            unsafe_allow_html=True
+            
+            ) 
+
+
 
 
 # Main Chatbot Application
@@ -115,18 +277,32 @@ if st.session_state['logged_in']:
             specific_rerun() # Reload to reflect the new chat
         elif new_chat_name:
             st.sidebar.error("Chat name must be unique and non-empty.")
+    
+    st.sidebar.markdown("""
+        <div style="text-align: justify; font-size: 0.9em; margin-top: 50px; border-top: 1px solid #ddd; padding-top: 10px;">
+            This chatbot was developed by the <strong>Ragify team</strong>, including Barış Coşkun, 
+            Laya Moridsedaghat, Şeymanur Özen, and Şeyma Şimşek, on behalf of the 
+            <strong>Graduate School of Informatics</strong>. It was first released in 
+            <strong>December 2024</strong> and last updated in <strong>December 2024</strong>. 
+            For further inquiries, please contact <strong>Res. Assist. Şeyma Şimşek</strong> at 
+            <a href="mailto:sseyma@metu.edu.tr" style="text-decoration: none; color: blue;">
+            sseyma@metu.edu.tr
+            </a>.
+        </div>
+    """, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
     with col2:
-        # st.image(r"./images/ragify_logo.jpg")
-        st.header("Ragify")
+        st.image(r"./images/ragify_logo.jpg", use_column_width=True)
+        #st.header("Ragify")
+
 
     # Display chat messages from the selected chat
     for message in USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name]:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    ragify_pipeline = load_rag_chain(llm_name=selected_model, embedding_name=selected_embedder, chunk_size=selected_chunk_size)
+    # ragify_pipeline = load_rag_chain(llm_name=selected_model, embedding_name=selected_embedder, chunk_size=selected_chunk_size)
 
     # Handle new user input
     if question := st.chat_input("How can I help you?"):
@@ -137,12 +313,23 @@ if st.session_state['logged_in']:
         # Simulate assistant response
         with st.chat_message("assistant"):
             with st.spinner("Responding..."):
-                response, time_collapsed = ragify_pipeline.generate_response(
-                    question=question,
-                    chat_history=USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name]
-                )
+                response = f"Simulated response to: {question}"
+                #response, time_collapsed = ragify_pipeline.generate_response(
+                #    question=question,
+                #    chat_history=USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name]
+                #)
 
             st.markdown(response)
+                # Add OK and Not OK buttons under the response
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                if st.button("OK", key=f"ok_{len(USER_DETAILS[st.session_state['username']])}"):
+                    st.info("Thank you for confirming!")
+            with col2:
+                if st.button("Not OK", key=f"not_ok_{len(USER_DETAILS[st.session_state['username']])}"):
+                    st.error("We're sorry to hear that. Please provide feedback!")
+
+
         USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name].append(
             {"role": "user", "content": question})
         USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name].append(
@@ -150,3 +337,7 @@ if st.session_state['logged_in']:
 
         with open('user_database.json', 'w') as file:
             json.dump(USER_DETAILS, file, indent=4)
+
+            
+
+        

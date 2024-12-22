@@ -9,11 +9,11 @@ RUN apt-get update && \
 RUN curl -O https://ollama.ai/install.sh && \
     bash install.sh
 
-CMD ["bash", "-c", "ollama serve & ollama pull llama3.2:1b"]
-CMD ["bash", "-c", "ollama serve & ollama pull llama3.2:3b"]
-CMD ["bash", "-c", "ollama serve & ollama pull llama3.2:latest"]
-CMD ["bash", "-c", "ollama serve & ollama pull nomic-embed-text"]
-CMD ["bash", "-c", "ollama serve & ollama pull mxbai-embed-large"]
+RUN ollama serve & sleep 5 && ollama pull llama3.2:1b
+RUN ollama serve & sleep 5 && ollama pull llama3.2:3b
+RUN ollama serve & sleep 5 && ollama pull llama3.2:latest
+RUN ollama serve & sleep 5 && ollama pull nomic-embed-text
+RUN ollama serve & sleep 5 && ollama pull mxbai-embed-large
 
 # Set the working directory
 WORKDIR /app
