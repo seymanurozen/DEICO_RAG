@@ -164,35 +164,22 @@ logo_image = (
     if st.session_state['theme'] else r"images/logo_light.png"
 )
 
+text_color = "white" if st.session_state['theme'] else "black"
+text_color_inverse = "black" if st.session_state['theme'] else "white"
+
 # Header text, styled according to the theme
-header = """
-        <div style="text-align: justify; color:white;">
+header = f"""
+        <div style="text-align: justify; color:{text_color};">
             Welcome to <strong>Ragify</strong>, your personalized assistant designed to simplify the complexities of 
             METU's <em>"Rules and Regulations Governing Graduate Studies."</em> 
             Ragify helps graduate students navigate enrollment procedures, course requirements, thesis guidelines, and more with ease and confidence.
         </div>
-
-        <hr style="border: 1px solid white; background-color: white;">
-        """ if st.session_state['theme'] else """
-        <div style="text-align: justify;">
-            Welcome to <strong>Ragify</strong>, your personalized assistant designed to simplify the complexities of 
-            METU's <em>"Rules and Regulations Governing Graduate Studies."</em> 
-            Ragify helps graduate students navigate enrollment procedures, course requirements, thesis guidelines, and more with ease and confidence.
-        </div>
-
-        <hr>  <!-- Add a horizontal line -->
+        <hr style="border: 1px solid {text_color}; background-color: {text_color};">
         """
 
 # Footer text, styled according to the theme
-footer = """
-        <div style="text-align: justify; font-size: 0.9em; margin-top: 50px; border-top: 1px solid #ddd; padding-top: 10px; color: white;">
-        This chatbot was developed by the <strong>Ragify team</strong>, including Barış Coşkun, Laya Moridsedaghat, Şeymanur Özen, and Şeyma Şimşek, on behalf of the <strong>Graduate School of Informatics</strong>. It was first released in <strong>December 2024</strong> and last updated in <strong>December 2024</strong>. For further inquiries, please contact <strong>Res. Assist. Şeyma Şimşek</strong> at 
-        <a href="mailto:sseyma@metu.edu.tr" style="text-decoration: none; color: lightblue;">
-        sseyma@metu.edu.tr
-        </a>.
-        </div>
-        """ if st.session_state['theme'] else """
-        <div style="text-align: justify; font-size: 0.9em; margin-top: 50px; border-top: 1px solid #ddd; padding-top: 10px;">
+footer = f"""
+        <div style="text-align: justify; font-size: 0.9em; margin-top: 50px; padding-top: 10px; color: {text_color};">
         This chatbot was developed by the <strong>Ragify team</strong>, including Barış Coşkun, Laya Moridsedaghat, Şeymanur Özen, and Şeyma Şimşek, on behalf of the <strong>Graduate School of Informatics</strong>. It was first released in <strong>December 2024</strong> and last updated in <strong>December 2024</strong>. For further inquiries, please contact <strong>Res. Assist. Şeyma Şimşek</strong> at 
         <a href="mailto:sseyma@metu.edu.tr" style="text-decoration: none; color: blue;">
         sseyma@metu.edu.tr
@@ -201,66 +188,38 @@ footer = """
         """
 
 # CSS layout changes for dark mode or light mode
-css_layout = """
+css_layout = f"""
         <style>
-            body {
-                background-color: black !important;
-            }
-            label {
-                color: white !important;
-            }
-            input {
-                color: white !important;
-                background-color: black !important;
-                border: 1px solid white !important;
-            }
-        </style>
-        """ if st.session_state['theme'] else """
-        <style>
-            body {
-                background-color: white !important;
-            }
-            label {
-                color: black !important;
-            }
-            input {
-                color: black !important;
-                background-color: white !important;
-                border: 1px solid black !important;
-            }
+            body {{
+                background-color: {text_color_inverse} !important;
+            }}
+            label {{
+                color: {text_color} !important;
+            }}
+            input {{
+                color: {text_color} !important;
+                background-color: {text_color_inverse} !important;
+                border: 1px solid {text_color} !important;
+            }}
         </style>
         """
 
 # CSS for the chat message container and input box
-message_layout = """
+message_layout = f"""
         <style>
-        div[data-testid="stChatMessageContent"] {
-            background-color: black;
-            color: white;
-        } 
+        div[data-testid="stChatMessageContent"] {{
+            background-color: {text_color_inverse};
+            color: {text_color};
+        }}
 
-        div[data-testid="stChatMessage"] {
-            background-color: black;
-        }
+        div[data-testid="stChatMessage"] {{
+            background-color: {text_color_inverse};
+        }}
 
-        div[data-testid="stChatInput"] {
-            background-color: black;
-        }
+        div[data-testid="stChatInput"] {{
+            background-color: {text_color_inverse};
+        }}
 
-        </style>
-    """ if st.session_state['theme'] else """
-        <style>
-        div[data-testid="stChatMessageContent"] {
-            background-color: white;
-        } 
-
-        div[data-testid="stChatMessage"] {
-            background-color: white;
-        }
-
-        div[data-testid="stChatInput"] {
-            background-color: white;
-        }
         </style>
     """
 
@@ -328,9 +287,6 @@ if not st.session_state['logged_in']:
         else:
             st.error("User already exists. Please try again.")
 
-    # Footer displayed at the bottom of the login page
-    st.markdown(footer, unsafe_allow_html=True)
-
 # ---------------------
 #  MAIN CHAT INTERFACE
 # ---------------------
@@ -370,23 +326,6 @@ if st.session_state['logged_in']:
         elif new_chat_name:
             st.sidebar.error("Chat name must be unique and non-empty.")
 
-    # Display a small footer in the sidebar as well
-    st.sidebar.markdown(
-        """
-        <div style="text-align: justify; font-size: 0.9em; margin-top: 50px; border-top: 1px solid #ddd; padding-top: 10px;">
-            This chatbot was developed by the <strong>Ragify team</strong>, including Barış Coşkun, 
-            Laya Moridsedaghat, Şeymanur Özen, and Şeyma Şimşek, on behalf of the 
-            <strong>Graduate School of Informatics</strong>. It was first released in 
-            <strong>December 2024</strong> and last updated in <strong>December 2024</strong>. 
-            For further inquiries, please contact <strong>Res. Assist. Şeyma Şimşek</strong> at 
-            <a href="mailto:sseyma@metu.edu.tr" style="text-decoration: none; color: blue;">
-            sseyma@metu.edu.tr
-            </a>.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
     # Display the message history for the selected chat
     for message in USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name]:
         with st.chat_message(message["role"]):
@@ -424,3 +363,6 @@ if st.session_state['logged_in']:
                 {"role": "assistant", "content": response}
             )
             specific_rerun()
+
+# Display a footer
+st.markdown(footer,unsafe_allow_html=True)
