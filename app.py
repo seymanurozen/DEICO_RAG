@@ -179,7 +179,7 @@ header = f"""
 
 # Footer text, styled according to the theme
 footer = f"""
-        <div style="text-align: justify; font-size: 0.9em; margin-top: 50px; padding-top: 10px; color: {text_color};">
+        <div style="text-align: justify; font-size: 0.9em; color: {text_color};">
         This chatbot was developed by the <strong>Ragify team</strong>, including Barış Coşkun, Laya Moridsedaghat, Şeymanur Özen, and Şeyma Şimşek, on behalf of the <strong>Graduate School of Informatics</strong>. It was first released in <strong>December 2024</strong> and last updated in <strong>December 2024</strong>. For further inquiries, please contact <strong>Res. Assist. Şeyma Şimşek</strong> at 
         <a href="mailto:sseyma@metu.edu.tr" style="text-decoration: none; color: blue;">
         sseyma@metu.edu.tr
@@ -326,11 +326,6 @@ if st.session_state['logged_in']:
         elif new_chat_name:
             st.sidebar.error("Chat name must be unique and non-empty.")
 
-    # Display the message history for the selected chat
-    for message in USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name]:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
     # Load the Ragify pipeline for LLM-based QA
     ragify_pipeline = load_rag_chain(
         llm_name=selected_model,
@@ -339,7 +334,11 @@ if st.session_state['logged_in']:
     )
 
     # Chat input container
-    with st.container():
+    with st.container(height=500, border=False):
+        # Display the message history for the selected chat
+        for message in USER_DETAILS[st.session_state['username']]["chat_history"][current_chat_name]:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
         # Check if the user has submitted a question
         if question := st.chat_input("How can I help you?"):
             # Display user input in the conversation
