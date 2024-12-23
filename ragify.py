@@ -66,9 +66,8 @@ class Ragify:
         # Define a base prompt for RAG
         self.rag_prompt = ChatPromptTemplate.from_template(
             """
-            You are an assistant specialized in providing information about the 
-            'Rules and Regulations Governing Graduate Studies' at METU.
-            Use ONLY the provided context to answer the question. Do not use outside knowledge.
+            You are an assistant specialized in providing information about the 'Rules and Regulations Governing Graduate Studies' at METU.
+            Use ONLY the provided context to answer the question. Do not use outside knowledge."Answer only if the question aligns with the provided context. For out-of-scope questions, respond with 'I’d be happy to help with any questions about the 'METU Regulations and IS Student Guide'!"
 
             <context>
             {context}
